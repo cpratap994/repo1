@@ -1,7 +1,22 @@
-name: say hello
-on: pull_request
+name: Docker push container at org level (GITHUB_TOKEN)
+on: workflow_dispatch
+
+permissions:
+ packages: write
+ 
+env:
+ pkg: "drupal"
+
 jobs:
-  test-job:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "hello"
+ all:
+  runs-on: self-hosted
+  
+  steps:
+   - name: Login to GitHub container Registry
+     run: echo ${{ secrets.GITHUB_TOKEN }} | docker login github.localhost:8001 -u ${{ github.actor }} --password-stdin
+   - name: Build the Docker image
+     run: docker pull $pkg:latest
+   - name: Tag the Docker image
+     run: docker tag $pkg:latest github.localhost:8001/github/$pkg:latest
+   - name: Push the Docker image to the registry
+     run: docker push github.localhost:8001/github/$pkg:latest
